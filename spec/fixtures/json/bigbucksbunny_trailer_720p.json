@@ -87,7 +87,7 @@
         }
     ],
     "format": {
-        "filename": "spec/fixtures/movies/bigbucksbunny_trailer_720p.mov",
+        "filename": "../movies/bigbucksbunny_trailer_720p.mov",
         "nb_streams": 2,
         "nb_programs": 0,
         "format_name": "mov,mp4,m4a,3gp,3g2,mj2",

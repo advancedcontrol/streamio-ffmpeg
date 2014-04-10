@@ -15,8 +15,8 @@ module FFMPEG
         end
 
         it "should run ffmpeg successfully" do
-          @movie.duration.should == 7.56
-          @movie.frame_rate.should == 16.75
+          expect(@movie.duration).to be_within(0.01).of(7.56)
+          expect(@movie.frame_rate).to be_within(0.01).of(16.75)
         end
       end
 
@@ -70,82 +70,10 @@ module FFMPEG
         end
       end
 
-      context "given a weird aspect ratio file" do
-        before(:all) do
-          @movie = Movie.new("#{fixture_path}/movies/weird_aspect.small.mpg")
-        end
-
-        it "should parse the DAR" do
-          @movie.dar.should == "704:405"
-        end
-
-        it "should have correct calculated_aspect_ratio" do
-          @movie.calculated_aspect_ratio.to_s[0..14].should == "1.7382716049382" # substringed to be 1.9 compatible
-        end
-      end
-
-      context "given an impossible DAR" do
-        before(:all) do
-          fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_weird_dar.txt"))
-          Open3.stub(:popen3).and_yield(nil,nil,fake_output)
-          @movie = Movie.new(__FILE__)
-        end
-
-        it "should parse the DAR" do
-          @movie.dar.should == "0:1"
-        end
-
-        it "should calulate using width and height instead" do
-          @movie.calculated_aspect_ratio.to_s[0..14].should == "1.7777777777777" # substringed to be 1.9 compatible
-        end
-      end
-
-      context "given a weird storage/pixel aspect ratio file" do
-        before(:all) do
-          @movie = Movie.new("#{fixture_path}/movies/weird_aspect.small.mpg")
-        end
-
-        it "should parse the SAR" do
-          @movie.sar.should == "64:45"
-        end
-
-        it "should have correct calculated_pixel_aspect_ratio" do
-          @movie.calculated_pixel_aspect_ratio.to_s[0..14].should == "1.4222222222222" # substringed to be 1.9 compatible
-        end
-      end
-
-      context "given a colorspace with parenthesis but no commas such as yuv420p(tv)" do
-        before(:all) do
-          fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_colorspace_with_parenthesis_but_no_comma.txt"))
-          Open3.stub(:popen3).and_yield(nil,nil,fake_output)
-          @movie = Movie.new(__FILE__)
-        end
-
-        it "should have correct video stream" do
-          @movie.colorspace.should == "yuv420p(tv)"
-        end
-      end
-
-      context "given an impossible SAR" do
-        before(:all) do
-          fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_weird_sar.txt"))
-          Open3.stub(:popen3).and_yield(nil,nil,fake_output)
-          @movie = Movie.new(__FILE__)
-        end
-
-        it "should parse the SAR" do
-          @movie.sar.should == "0:1"
-        end
-
-        it "should using square SAR, 1.0 instead" do
-          @movie.calculated_pixel_aspect_ratio.to_s[0..14].should == "1" # substringed to be 1.9 compatible
-        end
-      end
-
       context "given a file with ISO-8859-1 characters in output" do
         it "should not crash" do
           fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_iso-8859-1.txt"))
-          Open3.stub(:popen3).and_yield(nil, nil, fake_output)
+          Open3.stub(:popen3).and_yield(nil, fake_output, nil)
           expect { Movie.new(__FILE__) }.to_not raise_error
         end
       end
@@ -153,7 +81,7 @@ module FFMPEG
       context "given a file with 5.1 audio" do
         before(:all) do
           fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_surround_sound.txt"))
-          Open3.stub(:popen3).and_yield(nil, nil, fake_output)
+          Open3.stub(:popen3).and_yield(nil, fake_output, nil)
           @movie = Movie.new(__FILE__)
         end
 
@@ -165,7 +93,7 @@ module FFMPEG
       context "given a file with no audio" do
         before(:all) do
           fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_no_audio.txt"))
-          Open3.stub(:popen3).and_yield(nil, nil, fake_output)
+          Open3.stub(:popen3).and_yield(nil, fake_output, nil)
           @movie = Movie.new(__FILE__)
         end
 
@@ -176,34 +104,14 @@ module FFMPEG
 
       context "given a file with non supported audio" do
         before(:all) do
-          fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_non_supported_audio.txt"))
-          Open3.stub(:popen3).and_yield(nil, nil, fake_output)
+          fake_stdout = StringIO.new(File.read("#{fixture_path}/outputs/file_with_non_supported_audio_stdout.txt"))
+          fake_stderr = StringIO.new(File.read("#{fixture_path}/outputs/file_with_non_supported_audio_stderr.txt"))
+          Open3.stub(:popen3).and_yield(nil, fake_stdout, fake_stderr)
           @movie = Movie.new(__FILE__)
         end
 
         it "should not be valid" do
           @movie.should_not be_valid
-        end
-      end
-
-      context "given a file with complex colorspace and decimal fps" do
-        before(:all) do
-          fake_output = StringIO.new(File.read("#{fixture_path}/outputs/file_with_complex_colorspace_and_decimal_fps.txt"))
-          Open3.stub(:popen3).and_yield(nil, nil, fake_output)
-          @movie = Movie.new(__FILE__)
-        end
-
-        it "should know the framerate" do
-          @movie.frame_rate.should == 23.98
-        end
-
-        it "should know the colorspace" do
-          @movie.colorspace.should == "yuv420p(tv, bt709)"
-        end
-
-        it "should know the width and height" do
-          @movie.width.should == 960
-          @movie.height.should == 540
         end
       end
 
@@ -217,11 +125,11 @@ module FFMPEG
         end
 
         it "should parse duration to number of seconds" do
-          @movie.duration.should == 7.56
+          expect(@movie.duration).to be_within(0.01).of(7.56)
         end
 
         it "should parse the bitrate" do
-          @movie.bitrate.should == 481
+          @movie.bitrate.should == 481846
         end
 
         it "should return nil rotation when no rotation exists" do
@@ -249,7 +157,7 @@ module FFMPEG
         end
 
         it "should know the video bitrate" do
-          @movie.video_bitrate.should == 371
+          @movie.video_bitrate.should == 371185
         end
 
         it "should know the width and height" do
@@ -258,11 +166,11 @@ module FFMPEG
         end
 
         it "should know the framerate" do
-          @movie.frame_rate.should == 16.75
+          expect(@movie.frame_rate).to be_within(0.01).of(16.75)
         end
 
         it "should parse audio stream information" do
-          @movie.audio_stream.should == "aac (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 75 kb/s"
+          @movie.audio_stream.should == "aac (mp4a / 0x6134706d), 44100 Hz, stereo, fltp, 75 kb/s"
         end
 
         it "should know the audio codec" do
@@ -278,7 +186,7 @@ module FFMPEG
         end
 
         it "should know the audio bitrate" do
-          @movie.audio_bitrate.should == 75
+          @movie.audio_bitrate.should == 75832
         end
 
         it "should should be valid" do

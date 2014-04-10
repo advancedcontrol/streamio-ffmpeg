@@ -45,7 +45,7 @@
         }
     ],
     "format": {
-        "filename": "spec/fixtures/movies/no_audio.mov",
+        "filename": "../movies/no_audio.mov",
         "nb_streams": 1,
         "nb_programs": 0,
         "format_name": "mov,mp4,m4a,3gp,3g2,mj2",

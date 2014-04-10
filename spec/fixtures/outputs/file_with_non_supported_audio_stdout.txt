@@ -46,16 +46,13 @@
         },
         {
             "index": 1,
-            "codec_name": "aac",
-            "codec_long_name": "AAC (Advanced Audio Coding)",
             "codec_type": "audio",
-            "codec_time_base": "1/48000",
+            "codec_time_base": "0/1",
             "codec_tag_string": "mp4a",
             "codec_tag": "0x6134706d",
-            "sample_fmt": "fltp",
             "sample_rate": "48000",
             "channels": 6,
-            "channel_layout": "5.1",
+            "channel_layout": "5.1(side)",
             "bits_per_sample": 0,
             "r_frame_rate": "0/0",
             "avg_frame_rate": "0/0",
@@ -87,7 +84,7 @@
         }
     ],
     "format": {
-        "filename": "spec/fixtures/movies/bigbucksbunny_trailer_720p.mov",
+        "filename": "bigbucksbunny_trailer_720p.mov",
         "nb_streams": 2,
         "nb_programs": 0,
         "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
