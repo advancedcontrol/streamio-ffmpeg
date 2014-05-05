@@ -63,7 +63,10 @@ module FFMPEG
       end
     end
 
+
     private
+
+
     # frame= 4855 fps= 46 q=31.0 size=   45306kB time=00:02:42.28 bitrate=2287.0kbits/
     def transcode_movie
       @command = "#{FFMPEG.ffmpeg_binary} -y -i #{Shellwords.escape(@movie.path)} #{@raw_options} #{Shellwords.escape(@output_file)}"
@@ -112,22 +115,50 @@ module FFMPEG
     end
 
     def apply_transcoder_options
-       # if true runs #validate_output_file
-      @transcoder_options[:validate] = @transcoder_options.fetch(:validate) { true }
+      autorotate = (@transcoder_options[:autorotate] && @movie.rotation)
+      apply_autorotate if autorotate
 
-      return if @movie.calculated_aspect_ratio.nil?
+      # if true runs #validate_output_file
+      @transcoder_options[:validate] = @transcoder_options.fetch(:validate) { true }
+      apply_preserve_aspect_ratio(autorotate) if @movie.calculated_aspect_ratio
+    end
+
+    def apply_autorotate
+      # remove the rotation information on the video stream so rotation-aware players don't rotate twice
+      @raw_options[:metadata] = 's:v:0 rotate=0'
+      filters = {
+        90  => 'transpose=1',
+        180 => 'hflip,vflip',
+        270 => 'transpose=2'
+      }
+      @raw_options[:video_filter] = filters[@movie.rotation]
+    end
+
+    def apply_preserve_aspect_ratio(autorotate = false)
       case @transcoder_options[:preserve_aspect_ratio].to_s
       when "width"
-        new_height = @raw_options.width / @movie.calculated_aspect_ratio
-        new_height = new_height.ceil.even? ? new_height.ceil : new_height.floor
-        new_height += 1 if new_height.odd? # needed if new_height ended up with no decimals in the first place
+        new_height = @raw_options.width / aspect_ratio(autorotate)
+        new_height = evenize(new_height)
         @raw_options[:resolution] = "#{@raw_options.width}x#{new_height}"
       when "height"
-        new_width = @raw_options.height * @movie.calculated_aspect_ratio
-        new_width = new_width.ceil.even? ? new_width.ceil : new_width.floor
-        new_width += 1 if new_width.odd?
+        new_width = @raw_options.height * aspect_ratio(autorotate)
+        new_width = evenize(new_width)
         @raw_options[:resolution] = "#{new_width}x#{@raw_options.height}"
       end
+    end
+
+    def aspect_ratio(autorotate)
+      if (autorotate && [90, 270].include?(@movie.rotation))
+        1 / @movie.calculated_aspect_ratio
+      else
+        @movie.calculated_aspect_ratio
+      end
+    end
+
+    # ffmpeg requires full, even numbers for its resolution string -- this method ensures that
+    def evenize(number)
+      number = number.ceil.even? ? number.ceil : number.floor
+      number.odd? ? number += 1 : number # needed if new_height ended up with no decimals in the first place
     end
 
     def fix_encoding(output)

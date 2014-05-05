@@ -147,6 +147,16 @@ module FFMPEG
         EncodingOptions.new(watermark: "watermark.png").to_s.should == "-i watermark.png"
       end
 
+      it "should convert metadata" do
+        setting = 's:v:0 rotate=0'
+        EncodingOptions.new(:metadata => setting).to_s.should == "-metadata:#{setting}"
+      end
+
+      it "should convert video filter" do
+        setting = 'transpose=1'
+        EncodingOptions.new(:video_filter => setting).to_s.should == "-vf #{setting}"
+      end
+
       it "should specify watermark position at left top corner" do
         opts = Hash.new
         opts[:resolution] = "640x480"
