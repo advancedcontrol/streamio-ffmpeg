@@ -139,12 +139,12 @@ module FFMPEG
     end
 
     def apply_preserve_aspect_ratio(autorotate = false)
-      case @transcoder_options[:preserve_aspect_ratio].to_s
-      when "width"
+      case @transcoder_options[:preserve_aspect_ratio]
+      when :width
         new_height = @raw_options.width / aspect_ratio(autorotate)
         new_height = evenize(new_height)
         @raw_options[:resolution] = "#{@raw_options.width}x#{new_height}"
-      when "height"
+      when :height
         new_width = @raw_options.height * aspect_ratio(autorotate)
         new_width = evenize(new_width)
         @raw_options[:resolution] = "#{new_width}x#{@raw_options.height}"
