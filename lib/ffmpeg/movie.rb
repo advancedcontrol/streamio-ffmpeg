@@ -246,14 +246,23 @@ module FFMPEG
     end
 
     def transcode(output_file, options = EncodingOptions.new, transcoder_options = {}, &block)
-      Transcoder.new(self, output_file, options, transcoder_options).run &block
+      @transcoder = Transcoder.new(self, output_file, options, transcoder_options)
+      @transcoder.run &block
+    end
+
+    def transcoder_output
+      @transcoder.output if @transcoder
     end
 
     def screenshot(output_file, options = EncodingOptions.new, transcoder_options = {}, &block)
-      Transcoder.new(self, output_file, options.merge(screenshot: true), transcoder_options).run &block
+      @transcoder = Transcoder.new(self, output_file, options.merge(screenshot: true), transcoder_options)
+      @transcoder.run &block
     end
 
+
     protected
+
+
     def fix_encoding(output)
       output[/test/] # Running a regexp on the string throws error if it's not UTF-8
     rescue ArgumentError

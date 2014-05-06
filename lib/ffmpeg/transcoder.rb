@@ -13,6 +13,10 @@ module FFMPEG
       @@timeout
     end
 
+
+    attr_reader :output
+
+
     def initialize(movie, output_file, options = EncodingOptions.new, transcoder_options = {})
       @movie = movie
       @output_file = output_file
