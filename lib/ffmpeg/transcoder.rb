@@ -1,8 +1,16 @@
 require 'open3'
 require 'shellwords'
+require 'ffmpeg/transcoders/autorotator'
+require 'ffmpeg/transcoders/scaler'
 
 module FFMPEG
   class Transcoder
+
+
+    include FFMPEG::Transcoders::Autorotator
+    include FFMPEG::Transcoders::Scaler
+
+
     @@timeout = 30
 
     def self.timeout=(time)
@@ -17,7 +25,7 @@ module FFMPEG
     attr_reader :output
 
 
-    def initialize(movie, output_file, options = EncodingOptions.new, transcoder_options = {})
+    def initialize(movie, output_file, options = EncodingOptions.new, transcoder_options = {:enlarge => true})
       @movie = movie
       @output_file = output_file
 
@@ -119,50 +127,12 @@ module FFMPEG
     end
 
     def apply_transcoder_options
-      autorotate = (@transcoder_options[:autorotate] && @movie.rotation)
-      apply_autorotate if autorotate
+      apply_autorotate
+      changes_orientation = changes_orientation?
 
       # if true runs #validate_output_file
       @transcoder_options[:validate] = @transcoder_options.fetch(:validate) { true }
-      apply_preserve_aspect_ratio(autorotate) if @movie.calculated_aspect_ratio
-    end
-
-    def apply_autorotate
-      # remove the rotation information on the video stream so rotation-aware players don't rotate twice
-      @raw_options[:metadata] = 's:v:0 rotate=0'
-      filters = {
-        90  => 'transpose=1',
-        180 => 'hflip,vflip',
-        270 => 'transpose=2'
-      }
-      @raw_options[:video_filter] = filters[@movie.rotation]
-    end
-
-    def apply_preserve_aspect_ratio(autorotate = false)
-      case @transcoder_options[:preserve_aspect_ratio]
-      when :width
-        new_height = @raw_options.width / aspect_ratio(autorotate)
-        new_height = evenize(new_height)
-        @raw_options[:resolution] = "#{@raw_options.width}x#{new_height}"
-      when :height
-        new_width = @raw_options.height * aspect_ratio(autorotate)
-        new_width = evenize(new_width)
-        @raw_options[:resolution] = "#{new_width}x#{@raw_options.height}"
-      end
-    end
-
-    def aspect_ratio(autorotate)
-      if (autorotate && [90, 270].include?(@movie.rotation))
-        1 / @movie.calculated_aspect_ratio
-      else
-        @movie.calculated_aspect_ratio
-      end
-    end
-
-    # ffmpeg requires full, even numbers for its resolution string -- this method ensures that
-    def evenize(number)
-      number = number.ceil.even? ? number.ceil : number.floor
-      number.odd? ? number += 1 : number # needed if new_height ended up with no decimals in the first place
+      apply_preserve_aspect_ratio(changes_orientation)
     end
 
     def fix_encoding(output)
