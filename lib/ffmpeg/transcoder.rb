@@ -4,9 +4,9 @@ require 'ffmpeg/transcoders/autorotator'
 require 'ffmpeg/transcoders/scaler'
 
 module FFMPEG
+  class ProcessError < Error; end
+
   class Transcoder
-
-
     include FFMPEG::Transcoders::Autorotator
     include FFMPEG::Transcoders::Scaler
 
@@ -84,6 +84,7 @@ module FFMPEG
       @command = "#{FFMPEG.ffmpeg_binary} -y -i #{Shellwords.escape(@movie.path)} #{@raw_options} #{Shellwords.escape(@output_file)}"
       FFMPEG.logger.info("Running transcoding...\n#{@command}\n")
       @output = ""
+      process = nil
 
       Open3.popen3(@command) do |stdin, stdout, stderr, wait_thr|
         begin
@@ -112,6 +113,19 @@ module FFMPEG
           FFMPEG.logger.error "Process hung...\n@command\n#{@command}\nOutput\n#{@output}\n"
           raise Error, "Process hung. Full output: #{@output}"
         end
+
+        # Grab the Process::Status object of the thread 
+        process = wait_thr.value
+      end
+
+      unless process && process.exited? && process.exitstatus == 0
+        msg = if process && process.exited?
+          "Transcoding failed with exit code: #{process.exitstatus}"
+        else
+          "Transcoding failed as the process was terminated prematurely"
+        end
+        
+        raise ProcessError, msg
       end
     end
 
