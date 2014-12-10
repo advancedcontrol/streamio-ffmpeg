@@ -120,9 +120,9 @@ module FFMPEG
 
       unless process && process.exited? && process.exitstatus == 0
         msg = if process && process.exited?
-          "Transcoding failed with exit code: #{process.exitstatus}"
+          "Transcoding failed with exit code: #{process.exitstatus}. Command was: '#{@command}'"
         else
-          "Transcoding failed as the process was terminated prematurely"
+          "Transcoding failed as the process was terminated prematurely. Command was: '#{@command}'"
         end
         
         raise ProcessError, msg
