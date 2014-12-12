@@ -96,8 +96,8 @@ module FFMPEG
     # This is really just a convenience method to AudioStream#bitrate
     # @return [Fixnum?] The bit rate of the first audio stream
     def audio_bitrate
-      warn '[DEPRECATION] `Movie#audio_bitrate` is deprecated. Please start looking at `Movie#audio_streams`'
-      audio_streams.first.bitrate
+      firstStream = audio_streams.first
+      firstStream.nil? ? 0 : firstStream.bitrate
     end
 
     ##
