@@ -63,7 +63,26 @@ module FFMPEG
       end
 
       @invalid = true if metadata.key?(:error)
-      @invalid = true if std_error.include?("Unsupported codec")
+
+      # Check this error isn't a stream we care about (most likely a data stream)
+      if std_error.include?("Unsupported codec")
+        matches = std_error.scan(/Unsupported\scodec\swith\sid\s(\d)\sfor\sinput\sstream\s(\d)/i)
+        matches.each do |check|
+          codec_id = check[0]
+          codec_stream = check[1]
+
+          if codec_id && codec_stream
+            stream = metadata[:streams][codec_stream]
+            if stream[:codec_type] === 'video' || stream[:codec_type] === 'audio'
+              @invalid = true
+              return
+            end
+          else
+            @invalid = true
+            return
+          end
+        end
+      end
       @invalid = true if std_error.include?("is not supported")
       @invalid = true if std_error.include?("could not find codec parameters")
     end
