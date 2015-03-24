@@ -50,7 +50,7 @@ module FFMPEG
   # @return [String] the path to the ffmpeg binary
   # @raise Errno::ENOENT if the ffmpeg binary cannot be found
   def self.ffmpeg_binary
-    @ffmpeg_binary || which('ffmpeg')
+    @ffmpeg_binary ||= which('ffmpeg')
   end
 
   # Get the path to the ffprobe binary, defaulting to what is on ENV['PATH']
@@ -58,7 +58,7 @@ module FFMPEG
   # @return [String] the path to the ffprobe binary
   # @raise Errno::ENOENT if the ffprobe binary cannot be found
   def self.ffprobe_binary
-    @ffprobe_binary || which('ffprobe')
+    @ffprobe_binary ||= which('ffprobe')
   end
 
   # Set the path of the ffprobe binary.

@@ -31,7 +31,7 @@ module FFMPEG
 
     private
     def supports_option?(option)
-      option = RUBY_VERSION < "1.9" ? "convert_#{option}" : "convert_#{option}".to_sym
+      option = "convert_#{option}".to_sym
       private_methods.include?(option)
     end
 

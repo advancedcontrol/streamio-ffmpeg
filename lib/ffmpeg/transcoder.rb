@@ -87,6 +87,8 @@ module FFMPEG
       process = nil
 
       Open3.popen3(@command) do |stdin, stdout, stderr, wait_thr|
+        stdout.close
+
         begin
           yield(0.0) if block_given?
           next_line = Proc.new do |line|
