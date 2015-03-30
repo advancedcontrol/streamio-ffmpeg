@@ -72,7 +72,7 @@ module FFMPEG
           codec_stream = check[1]
 
           if codec_id && codec_stream
-            stream = metadata[:streams][codec_stream]
+            stream = metadata[:streams][codec_stream.to_i]
             if stream[:codec_type] === 'video' || stream[:codec_type] === 'audio'
               @invalid = true
               return
